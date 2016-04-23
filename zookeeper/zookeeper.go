@@ -22,9 +22,17 @@ func NewDiscovery(servers []string) *discovery {
 
 func (z *discovery) Init() {
 	var err error
-	z.Conn, _, err = zk.Connect(z.Servers, 10*time.Second)
+	var ch <-chan zk.Event
+
+	z.Conn, ch, err = zk.Connect(z.Servers, 10*time.Second)
 	if err != nil {
 		logrus.Fatal(err)
+	}
+
+	for {
+		if (<-ch).State == zk.StateHasSession {
+			break
+		}
 	}
 
 	z.Marathon = newMarathonDiscovery(z.Conn)
