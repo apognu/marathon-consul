@@ -33,9 +33,19 @@ func NewService(task marathon.Task) *Service {
 }
 
 func (svc *Service) Register() {
+	if len(svc.Port) == 1 {
+		agent.ServiceRegister(&api.AgentServiceRegistration{
+			ID:      normalizeServiceID(svc.ID),
+			Name:    svc.Name,
+			Address: svc.Address,
+			Port:    svc.Port[0],
+			Tags:    svc.Tags,
+		})
+	}
+
 	for p, port := range svc.Port {
 		agent.ServiceRegister(&api.AgentServiceRegistration{
-			ID:      normalizeServiceID(svc.ID, p),
+			ID:      normalizeServiceIDWithPort(svc.ID, p),
 			Name:    normalizeServiceNameWithPort(svc.Name, p),
 			Address: svc.Address,
 			Port:    port,
@@ -65,10 +75,10 @@ func normalizeServiceNameWithPort(name string, port int) string {
 	return fmt.Sprintf("port%d-%s", port, name)
 }
 
-func normalizeServiceID(id string, port int) string {
-	return fmt.Sprintf("marathon-consul:%s:port:%d", id, port)
+func normalizeServiceID(id string) string {
+	return fmt.Sprintf("marathon-consul:%s", id)
 }
 
 func normalizeServiceIDWithPort(id string, port int) string {
-	return fmt.Sprintf("%s:port:%d", id, port)
+	return fmt.Sprintf("marathon-consul:%s:port:%d", id, port)
 }

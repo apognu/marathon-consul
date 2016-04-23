@@ -45,7 +45,11 @@ ServiceLoop:
 
 		for _, t := range tasks {
 			for p, _ := range t.Ports {
-				if normalizeServiceID(t.ID, p) == id {
+				if len(t.Ports) == 1 && normalizeServiceID(t.ID) == id {
+					continue ServiceLoop
+				}
+
+				if normalizeServiceIDWithPort(t.ID, p) == id {
 					continue ServiceLoop
 				}
 			}

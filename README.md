@@ -9,6 +9,10 @@ Service are named in dashed reverse order, only with characters allowed in Consu
  * port0-front-production-website.service.consul
  * port1-front-production-website.service.consul
 
+On top of that, service with only one port mapping also get registered without the leading port section, like this:
+
+ * front-production-website.service.consul
+
 Other than that, it is a regular Consul service registration, where each Marathon task will get one entry.
 
 ## Usage
