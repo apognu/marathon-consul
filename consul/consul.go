@@ -1,6 +1,8 @@
 package consul
 
 import (
+	"fmt"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/apognu/marathon-consul/marathon"
 	"github.com/apognu/marathon-consul/util"
@@ -10,7 +12,8 @@ import (
 type ApiServices map[string]interface{}
 
 var (
-	agent *api.Agent
+	agent   *api.Agent
+	catalog *api.Catalog
 )
 
 func Register(tasks []marathon.Task) {
@@ -22,6 +25,7 @@ func Register(tasks []marathon.Task) {
 		}
 
 		agent = client.Agent()
+		catalog = client.Catalog()
 	}
 
 	for _, task := range tasks {
@@ -32,29 +36,34 @@ func Register(tasks []marathon.Task) {
 }
 
 func deregisterServices(tasks []marathon.Task) {
-	svc, err := agent.Services()
-	if err != nil {
-		return
-	}
+	services, _, _ := catalog.Services(nil)
 
-ServiceLoop:
-	for id, _ := range svc {
-		if id == "consul" {
+	for svc, _ := range services {
+		if svc == "consul" {
 			continue
 		}
 
-		for _, t := range tasks {
-			for p, _ := range t.Ports {
-				if len(t.Ports) == 1 && normalizeServiceID(t.ID) == id {
-					continue ServiceLoop
+		catalogTasks, _, _ := catalog.Service(svc, "", nil)
+
+	DeregisterLoop:
+		for _, ct := range catalogTasks {
+			for _, t := range tasks {
+				if len(t.Ports) == 1 {
+					if normalizeServiceID(t.ID) == ct.ServiceID {
+						fmt.Println(t.ID, "is still here")
+						continue DeregisterLoop
+					}
 				}
 
-				if normalizeServiceIDWithPort(t.ID, p) == id {
-					continue ServiceLoop
+				for p, _ := range t.Ports {
+					if normalizeServiceIDWithPort(t.ID, p) == ct.ServiceID {
+						fmt.Println(t.ID, "is still here")
+						continue DeregisterLoop
+					}
 				}
 			}
-		}
 
-		DeregisterService(id)
+			DeregisterService(ct.Node, ct.Address, ct.ServiceID)
+		}
 	}
 }

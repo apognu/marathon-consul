@@ -34,28 +34,42 @@ func NewService(task marathon.Task) *Service {
 
 func (svc *Service) Register() {
 	if len(svc.Port) == 1 {
-		agent.ServiceRegister(&api.AgentServiceRegistration{
-			ID:      normalizeServiceID(svc.ID),
-			Name:    svc.Name,
+		catalog.Register(&api.CatalogRegistration{
+			Node:    svc.Address,
 			Address: svc.Address,
-			Port:    svc.Port[0],
-			Tags:    svc.Tags,
-		})
+			Service: &api.AgentService{
+				ID:      normalizeServiceID(svc.ID),
+				Service: svc.Name,
+				Address: svc.Address,
+				Port:    svc.Port[0],
+				Tags:    svc.Tags,
+			},
+		}, nil)
 	}
 
 	for p, port := range svc.Port {
-		agent.ServiceRegister(&api.AgentServiceRegistration{
-			ID:      normalizeServiceIDWithPort(svc.ID, p),
-			Name:    normalizeServiceNameWithPort(svc.Name, p),
+		catalog.Register(&api.CatalogRegistration{
+			Node:    svc.Address,
 			Address: svc.Address,
-			Port:    port,
-			Tags:    svc.Tags,
-		})
+			Service: &api.AgentService{
+				ID:      normalizeServiceIDWithPort(svc.ID, p),
+				Service: normalizeServiceNameWithPort(svc.Name, p),
+				Address: svc.Address,
+				Port:    port,
+				Tags:    svc.Tags,
+			},
+		}, nil)
 	}
 }
 
-func DeregisterService(id string) {
-	agent.ServiceDeregister(id)
+func DeregisterService(node, addr, id string) {
+	// agent.ServiceDeregister(id)
+	fmt.Printf("deregistering %s\n", id)
+	catalog.Deregister(&api.CatalogDeregistration{
+		Node:      node,
+		Address:   addr,
+		ServiceID: id,
+	}, nil)
 }
 
 func normalizeServiceName(name string) string {
