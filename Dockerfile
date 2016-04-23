@@ -3,8 +3,8 @@ MAINTAINER Antoine POPINEAU <antoine.popineau@appscho.com>
 
 RUN apk update && apk add git
 
-WORKDIR /go/src/app
-COPY . /go/src/app
-RUN go get -d . && go build .
+WORKDIR /go/src/github.com/apognu/marathon-consul
+COPY . /go/src/github.com/apognu/marathon-consul
+RUN go get ./... && go install .
 
-ENTRYPOINT [ "/go/src/app/app" ]
+ENTRYPOINT [ "/go/bin/marathon-consul" ]

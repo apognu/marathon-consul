@@ -3,18 +3,26 @@ package consul
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/apognu/marathon-consul/marathon"
+	"github.com/apognu/marathon-consul/util"
 	"github.com/hashicorp/consul/api"
 )
 
 type ApiServices map[string]interface{}
 
 var (
-	client, _ = api.NewClient(api.DefaultConfig())
-	agent     = client.Agent()
+	agent *api.Agent
 )
 
 func Register(tasks []marathon.Task) {
-	logrus.Info("registering services")
+	if agent == nil {
+		client, err := api.NewClient(util.Config.ConsulConfig)
+		if err != nil {
+			logrus.Error("could not connect to consul")
+			return
+		}
+
+		agent = client.Agent()
+	}
 
 	for _, task := range tasks {
 		NewService(task).Register()
