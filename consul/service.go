@@ -63,7 +63,10 @@ func (svc *Service) Register() {
 }
 
 func DeregisterService(node, addr, id string) {
-	// agent.ServiceDeregister(id)
+	if !strings.HasPrefix(id, "marathon-consul:") {
+		return
+	}
+
 	fmt.Printf("deregistering %s\n", id)
 	catalog.Deregister(&api.CatalogDeregistration{
 		Node:      node,

@@ -18,7 +18,7 @@ Other than that, it is a regular Consul service registration, where each Maratho
 ## Usage
 
 ```
-$ ./marathon-consul -help                                                                                                                                                                                                                              master:be067b1 ✱ ◼
+$ ./marathon-consul -help
 Usage of ./marathon-consul:
   -consul string
         address to a consul agent (default "127.0.0.1")
